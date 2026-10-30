@@ -1,15 +1,29 @@
 import { Link } from 'react-router-dom';
 import { CheckCircle2, Circle, Loader2 } from 'lucide-react';
-import { Card, PageHeader, Progress, Badge, scoreColor } from '../components/ui';
+import { Card, Progress, Badge, scoreColor } from '../components/ui';
+import { HeroCard, heroPrimary, heroGhost } from '../components/HeroCard';
 import { useData } from '../store/DataContext';
 import { TARGET } from '../lib/engine';
 
 export function CareerPath() {
   const d = useData();
+  const current = d.roadmap.find((s) => s.status !== 'Completed');
+  const currentIdx = current ? d.roadmap.indexOf(current) : -1;
+  const focus = current?.skills.filter((s) => s.score < TARGET).sort((a, b) => a.score - b.score)[0];
+  const doneStages = d.roadmap.filter((s) => s.status === 'Completed').length;
+  const atTarget = Object.values(d.scores).filter((s) => s.score >= TARGET).length;
   return (
     <div>
-      <PageHeader title="Career Path" sub={`A roadmap to ${d.domain?.role_title}. Stage progress is computed from your skill scores — it moves as you improve.`}
-        right={<div className="bg-white border border-line rounded-xl px-5 py-3 text-center"><div className="text-[10px] font-bold uppercase text-muted">Overall</div><div className="text-2xl font-extrabold text-brand">{d.readiness}%</div></div>} />
+      <HeroCard eyebrow={`✦ Career path • ${d.domain?.name ?? ''}`} ring={d.readiness} ringLabel="Ready"
+        title={current ? `You're on Stage ${currentIdx + 1}: ${current.title} (${current.progress}%)` : `Roadmap complete — you're ready for ${d.domain?.role_title}`}
+        stats={[{ label: 'Stages done', value: `${doneStages}/${d.roadmap.length}` }, { label: 'Skills at target', value: `${atTarget}/${Object.keys(d.scores).length}` }, { label: 'Gaps left', value: d.gaps.length }]}
+        actions={<>
+          {focus && <Link to={`/assessments/quiz/${focus.skill.id}`} className={heroPrimary}>Improve {focus.skill.name}</Link>}
+          <Link to="/skill-gap" className={heroGhost}>View skill gap</Link>
+        </>}>
+        Your roadmap to <strong className="text-white">{d.domain?.role_title}</strong>. Stage progress is computed from your skill scores — it moves as you improve.
+      </HeroCard>
+      <div className="h-6" />
       <div className="relative space-y-6 max-w-4xl">
         <div className="absolute left-[19px] top-6 bottom-6 w-0.5 bg-line" />
         {d.roadmap.map((step, idx) => {

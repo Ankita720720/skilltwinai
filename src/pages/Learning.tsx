@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ExternalLink, Check, Clock, Play, BookOpen, GraduationCap, Code2, FileText, ListVideo, Search } from 'lucide-react';
-import { Card, PageHeader, Badge, Progress, Empty, inputCls } from '../components/ui';
+import { Card, Badge, Progress, Empty, inputCls } from '../components/ui';
+import { HeroCard, heroPrimary } from '../components/HeroCard';
 import { useData } from '../store/DataContext';
 import { useAuth } from '../store/AuthContext';
 import { useToast } from '../store/ToastContext';
@@ -82,6 +83,10 @@ export function Learning() {
   const kindCount = (k: string) => (k === 'all' ? d.resources.length : d.resources.filter((r) => (k === 'video' ? r.kind === 'video' || isYouTube(r.url) : r.kind === k)).length);
   const matchKind = (r: Resource) => kind === 'all' || (kind === 'video' ? r.kind === 'video' || isYouTube(r.url) : r.kind === kind);
 
+  const minutesLeft = d.resources.filter((r) => !d.completedResourceIds.has(r.id)).reduce((a, r) => a + r.minutes, 0);
+  const nextUp = ordered.map((s) => d.resources.find((r) => r.skill_id === s.skill.id && !d.completedResourceIds.has(r.id))).find(Boolean);
+  const pctDone = d.resources.length ? Math.round((totalDone / d.resources.length) * 100) : 0;
+
   let shown = 0;
   const blocks = list.map((s) => {
     const res = d.resources
@@ -123,8 +128,12 @@ export function Learning() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Learning Resources" sub="Videos and reading for each skill — your weakest skills come first. Click a thumbnail to open it on YouTube (or the source site) and tick it off to raise that skill's score."
-        right={<div className="bg-white border border-line rounded-xl px-5 py-3 text-center"><div className="text-[10px] font-bold uppercase text-muted">Completed</div><div className="text-2xl font-extrabold text-brand">{totalDone}/{d.resources.length}</div></div>} />
+      <HeroCard eyebrow={`✦ Learning • ${d.domain?.name ?? ''}`} ring={pctDone} ringLabel="Done"
+        title={nextUp ? `Up next: ${nextUp.title}` : d.resources.length ? 'You finished every resource — nice work' : 'No resources for this path yet'}
+        stats={[{ label: 'Completed', value: `${totalDone}/${d.resources.length}` }, { label: 'Time left', value: fmtTime(minutesLeft) }, { label: 'Videos', value: kindCount('video') }]}
+        actions={nextUp && <a href={nextUp.url} target="_blank" rel="noreferrer noopener" className={heroPrimary}>Start learning <ExternalLink className="w-3.5 h-3.5" /></a>}>
+        Videos and reading for each skill — your weakest skills come first. Open a resource, then tick it off to raise that skill's score.
+      </HeroCard>
       <div className="flex flex-wrap gap-3">
         <input className={`${inputCls} max-w-xs`} placeholder="Search resources…" value={q} onChange={(e) => setQ(e.target.value)} />
         <select className={`${inputCls} max-w-[220px]`} value={skill} onChange={(e) => setSkill(e.target.value)}>

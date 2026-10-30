@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Mic, MicOff, ChevronRight, Video, VideoOff, Volume2, VolumeX, X, RotateCcw, Clock, Lightbulb } from 'lucide-react';
 import { Card, CardHead, PageHeader, Btn, Badge, Progress, Empty, Ring, Spinner, timeAgo, scoreColor } from '../components/ui';
+import { HeroCard, heroPrimary } from '../components/HeroCard';
 import { useData } from '../store/DataContext';
 import { useAuth } from '../store/AuthContext';
 import { useToast } from '../store/ToastContext';
@@ -293,10 +294,19 @@ export function Interview() {
     );
   }
 
+  const bestInterview = Math.max(0, ...d.sessions.map((s) => s.overall));
+  const avgInterview = d.sessions.length ? Math.round(d.sessions.reduce((a, s) => a + s.overall, 0) / d.sessions.length) : 0;
+  const answered = d.sessions.reduce((a, s) => a + s.answers.length, 0);
+
   /* ------------------------------ choose a round ------------------------------ */
   return (
     <div className="space-y-6">
-      <PageHeader title="Mock Interview" sub="Pick a round to start. Your camera opens beside a question panel where you can answer by voice or text." />
+      <HeroCard eyebrow={`✦ Mock interview • ${d.domain?.name ?? ''}`} ring={d.sessions[0]?.overall ?? 0} ringLabel="Last"
+        title={d.sessions.length ? `Best score so far: ${bestInterview}%` : 'Practise your first mock interview'}
+        stats={[{ label: 'Sessions', value: d.sessions.length }, { label: 'Average', value: d.sessions.length ? `${avgInterview}%` : '—' }, { label: 'Answered', value: answered }]}
+        actions={<button type="button" onClick={() => start('mixed')} className={heroPrimary}>Start a mixed round</button>}>
+        Pick a round to start. Your camera opens beside a question panel where you can answer by voice or text. Questions favour your weakest skills.
+      </HeroCard>
       <div className="grid xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2 space-y-5">
           <Card className="p-5 flex flex-wrap gap-x-8 gap-y-4 items-center">

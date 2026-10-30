@@ -6,7 +6,7 @@ import { useData } from '../store/DataContext';
 import { useAuth } from '../store/AuthContext';
 import { useToast } from '../store/ToastContext';
 import { supabase } from '../lib/supabase';
-import { pickQuestions } from '../lib/engine';
+import { shuffle } from '../lib/engine';
 import type { Question } from '../lib/types';
 
 export function Quiz() {
@@ -17,19 +17,33 @@ export function Quiz() {
   const nav = useNavigate();
   const skill = d.skills.find((s) => s.id === skillId);
   const [qs, setQs] = useState<Question[] | null>(null);
+  const [borrowed, setBorrowed] = useState(0);
   const [i, setI] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
   const [done, setDone] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const saved = useRef(false);
 
+  const QUIZ_SIZE = 10;
   useEffect(() => {
     if (!skillId) return;
-    supabase.from('questions').select('*').eq('skill_id', skillId).then(({ data, error }) => {
-      if (error) { toast(error.message, 'err'); return; }
-      const picked = pickQuestions((data as Question[]) || [], 10);
+    (async () => {
+      const own = await supabase.from('questions').select('*').eq('skill_id', skillId);
+      if (own.error) { toast(own.error.message, 'err'); return; }
+      const mine = shuffle((own.data as Question[]) || []);
+      let extra: Question[] = [];
+      // Every quiz has at least 10 questions: if this skill has fewer, top up with questions from the other skills of the same career path.
+      if (mine.length < QUIZ_SIZE) {
+        const others = d.skills.filter((x) => x.id !== skillId).map((x) => x.id);
+        if (others.length) {
+          const more = await supabase.from('questions').select('*').in('skill_id', others);
+          extra = shuffle((more.data as Question[]) || []).slice(0, QUIZ_SIZE - mine.length);
+        }
+      }
+      const picked = shuffle([...mine.slice(0, QUIZ_SIZE), ...extra]);
+      setBorrowed(extra.length);
       setQs(picked); setAnswers(picked.map(() => null));
-    });
+    })();
   }, [skillId]);
 
   useEffect(() => {
@@ -92,7 +106,7 @@ export function Quiz() {
   return (
     <div className="max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-4">
-        <div><div className="text-xs font-bold text-brand uppercase tracking-wider">{skill.name} assessment</div><div className="text-sm text-muted">Question {i + 1} of {qs.length}</div></div>
+        <div><div className="text-xs font-bold text-brand uppercase tracking-wider">{skill.name} assessment</div><div className="text-sm text-muted">Question {i + 1} of {qs.length}{borrowed > 0 && <span className="text-[11px]"> · includes {borrowed} related question{borrowed === 1 ? '' : 's'} from other skills in your path</span>}</div></div>
         <div className="flex items-center gap-1.5 text-sm font-bold text-navy bg-white border border-line rounded-lg px-3 py-1.5"><Timer className="w-4 h-4 text-brand" />{Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, '0')}</div>
       </div>
       <Progress value={((i + 1) / qs.length) * 100} color="#5B2EFF" />

@@ -33,7 +33,9 @@ export function Assessments() {
       </HeroCard>
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
         {Object.values(d.scores).map((s) => {
-          const count = d.questionCounts[s.skill.id] || 0;
+          const own = d.questionCounts[s.skill.id] || 0;
+          // quizzes are topped up to 10 with related questions from the same career path
+          const count = own >= 10 ? own : Math.min(10, totalQuestions);
           return (
             <Card key={s.skill.id} className="p-5 flex flex-col">
               <div className="flex items-start justify-between gap-2">

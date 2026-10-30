@@ -12,7 +12,6 @@ import {
 import {
   Card,
   CardHead,
-  PageHeader,
   Btn,
   Progress,
   Badge,
@@ -20,6 +19,7 @@ import {
   Empty,
   timeAgo,
 } from '../components/ui';
+import { HeroCard, heroPrimary } from '../components/HeroCard';
 import { useData } from '../store/DataContext';
 import { useAuth } from '../store/AuthContext';
 import { useToast } from '../store/ToastContext';
@@ -32,6 +32,8 @@ import {
 
 export function Resume() {
   const d = useData();
+  const latest = d.resumes[0];
+  const bestAts = Math.max(0, ...d.resumes.map((r) => r.ats_score));
   const { session } = useAuth();
   const toast = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -151,11 +153,12 @@ export function Resume() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Resume Analyzer"
-        sub={`Upload a PDF/text resume or paste it. We detect which ${d.domain?.role_title
-          } skills you mention and score ATS-readiness. Detected skills count as unverified until you pass a test.`}
-      />
+      <HeroCard eyebrow={`✦ Resume analyzer • ${d.domain?.name ?? ''}`} ring={latest?.ats_score ?? 0} ringLabel="ATS"
+        title={latest ? `Your latest ATS score is ${latest.ats_score}%` : 'Upload your resume to get an ATS score'}
+        stats={[{ label: 'Analyses', value: d.resumes.length }, { label: 'Skills found', value: `${latest?.detected_skill_ids.length ?? 0}/${d.skills.length}` }, { label: 'Best ATS', value: d.resumes.length ? `${bestAts}%` : '—' }]}
+        actions={<button type="button" disabled={busy} onClick={() => fileRef.current?.click()} className={`${heroPrimary} disabled:opacity-50`}>{latest ? 'Analyze a new resume' : 'Upload resume'}</button>}>
+        Upload a PDF/text resume or paste it. We detect which {d.domain?.role_title} skills you mention and score ATS-readiness. Detected skills count as unverified until you pass a test.
+      </HeroCard>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5 lg:gap-6">
         {/* Resume input */}
