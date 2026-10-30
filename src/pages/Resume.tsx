@@ -119,7 +119,7 @@ export function Resume() {
     }
   }
 
-  const latest = d.resumes[0];
+  // const latest = d.resumes[0];
 
   const scoreStatus = (score: number) => {
     if (score >= 70) {
