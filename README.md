@@ -1,4 +1,4 @@
-# SkillTwin Live
+# SkillTwin AI
 
 A dynamic rebuild of the SkillTwin AI idea (same look and pages) with **new code, new business logic and a new database**.
 Nothing a student sees is hard-coded: every score, gap, roadmap stage, job match and chart is computed from that user's own activity.
@@ -40,7 +40,7 @@ Add content by inserting rows (new skills, questions, jobs, domains) — the UI 
 
 ## Progressive Web App (PWA)
 
-SkillTwin Live includes a web app manifest, app icons, an install button, and a service worker with a cache-safe update strategy.
+SkillTwin AI includes a web app manifest, app icons, an install button, and a service worker with a cache-safe update strategy.
 
 - The service worker deliberately does **not** cache HTML, static assets, API responses, or authenticated data. This avoids serving stale app code after a deployment.
 - A new service-worker version waits for the user to select **Update**; the app then activates it and reloads.

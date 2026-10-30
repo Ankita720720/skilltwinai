@@ -1,4 +1,4 @@
-/* SkillTwin Live service worker: deliberately does not cache app or API responses.
+/* SkillTwin AI service worker: deliberately does not cache app or API responses.
  * Navigation always goes to the network, so deployments cannot be hidden behind a stale app shell.
  * The PWA remains installable; offline app usage is intentionally not enabled.
  */

@@ -3,7 +3,7 @@ def q(s):
     return "'" + str(s).replace("'", "''") + "'"
 def arr(xs):
     return "array[" + ",".join(q(x) for x in xs) + "]::text[]" if xs else "'{}'::text[]"
-out = ["-- SkillTwin Live seed data (generated). Run after schema.sql. Safe to re-run.\n",
+out = ["-- SkillTwin AI seed data (generated). Run after schema.sql. Safe to re-run.\n",
        "truncate public.interview_questions, public.jobs, public.projects, public.resources, public.coding_challenges, public.questions, public.skills, public.domains cascade;\n"]
 
 domains = [
