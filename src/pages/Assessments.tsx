@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Clock, Code2, ShieldCheck } from 'lucide-react';
+import { Brain, Clock, Code2, ShieldCheck } from 'lucide-react';
 import { Card, CardHead, Badge, Progress, LinkBtn, Empty, scoreColor, timeAgo } from '../components/ui';
 import { useData } from '../store/DataContext';
 import { HeroCard, heroPrimary, heroGhost } from '../components/HeroCard';
@@ -18,6 +18,8 @@ export function Assessments() {
   const next = [...testable].sort((a, b) => Number(a.verified) - Number(b.verified) || (a.verified ? a.score - b.score : b.skill.weight - a.skill.weight))[0];
   const avgQuiz = d.quizzes.length ? Math.round(d.quizzes.reduce((a, q) => a + (q.total ? (q.correct / q.total) * 100 : 0), 0) / d.quizzes.length) : 0;
   const totalQuestions = Object.values(d.questionCounts).reduce((a, b) => a + b, 0);
+  // aptitude attempts are stored in the activity log as "Aptitude test: 11/15"
+  const aptitude = d.activity.filter((a) => a.kind === 'aptitude').map((a) => { const m = a.label.match(/(\d+)\/(\d+)/); return m ? Math.round((+m[1] / +m[2]) * 100) : null; }).filter((x): x is number => x !== null);
 
   return (
     <div className="space-y-6">
@@ -31,6 +33,15 @@ export function Assessments() {
         Every attempt updates your skill score, gap analysis and job matches. Your latest three attempts per skill are averaged, so you can improve.
         {next && <> Recommended next: <strong className="text-white">{next.skill.name}</strong>{next.verified ? ` (currently ${next.score}%)` : ' — not tested yet'}.</>}
       </HeroCard>
+      <Card className="p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="w-12 h-12 rounded-xl bg-brand-soft text-brand flex items-center justify-center shrink-0"><Brain className="w-6 h-6" /></div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 flex-wrap"><h3 className="font-bold text-navy">Aptitude Test</h3><Badge tone="purple">All career paths</Badge></div>
+          <p className="text-xs text-muted mt-1">15 questions: quantitative, logical reasoning, verbal ability and data interpretation. A fresh set every attempt.</p>
+          <div className="text-[11px] text-muted mt-1.5">{aptitude.length ? <>Last <b className="text-navy">{aptitude[0]}%</b> · Best <b className="text-navy">{Math.max(...aptitude)}%</b> · {aptitude.length} attempt{aptitude.length === 1 ? '' : 's'}</> : 'Not attempted yet'}</div>
+        </div>
+        <LinkBtn to="/assessments/aptitude">{aptitude.length ? 'Retake' : 'Start test'}</LinkBtn>
+      </Card>
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
         {Object.values(d.scores).map((s) => {
           const own = d.questionCounts[s.skill.id] || 0;

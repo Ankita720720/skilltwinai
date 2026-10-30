@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { MapPin, Bookmark, BookmarkCheck, Send, Plus, SlidersHorizontal, X, ExternalLink, Trash2 } from 'lucide-react';
-import { Card, PageHeader, Badge, Progress, Btn, Modal, Empty, Field, inputCls, timeAgo, scoreColor } from '../components/ui';
+import { MapPin, Bookmark, BookmarkCheck, Send, SlidersHorizontal, X, ExternalLink, Trash2 } from 'lucide-react';
+import { Card, PageHeader, Badge, Progress, Btn, Modal, Empty, inputCls, timeAgo, scoreColor } from '../components/ui';
 import { useData } from '../store/DataContext';
 import { useAuth } from '../store/AuthContext';
 import { useToast } from '../store/ToastContext';
@@ -8,16 +8,6 @@ import { supabase } from '../lib/supabase';
 import { matchLabel, type JobMatch } from '../lib/engine';
 
 type Sort = 'match' | 'newest';
-const blank = { company: '', title: '', url: '', location: '', work_type: 'On-site', level: 'Entry Level', salary: '', description: '', skills: [] as string[] };
-
-function cleanUrl(raw: string): string | null {
-  const t = raw.trim();
-  if (!t) return null;
-  try {
-    const u = new URL(/^https?:\/\//i.test(t) ? t : `https://${t}`);
-    return (u.protocol === 'http:' || u.protocol === 'https:') && u.hostname.includes('.') ? u.toString() : null;
-  } catch { return null; }
-}
 
 /** Direct company link when we have one; otherwise a targeted search for the company's live openings. */
 const searchLink = (company: string, title: string) => `https://www.google.com/search?q=${encodeURIComponent(`${company} careers ${title} apply`)}`;
@@ -36,9 +26,6 @@ export function Jobs() {
   const [showFilters, setShowFilters] = useState(false);
   const [open, setOpen] = useState<JobMatch | null>(null);
   const [note, setNote] = useState('');
-  const [adding, setAdding] = useState(false);
-  const [form, setForm] = useState(blank);
-  const [saving, setSaving] = useState(false);
 
   const list = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -66,25 +53,7 @@ export function Jobs() {
     d.refresh();
   }
 
-  async function addOpportunity() {
-    if (!session || !d.domain) return;
-    const company = form.company.trim(), title = form.title.trim();
-    if (!company || !title) return toast('Company and job role are required.', 'err');
-    const url = cleanUrl(form.url);
-    if (!url) return toast('Enter a valid job link (e.g. https://company.com/careers/123).', 'err');
-    setSaving(true);
-    const { error } = await supabase.from('jobs').insert({
-      domain_id: d.domain.id, title, company, location: form.location.trim() || 'Not specified', work_type: form.work_type, level: form.level,
-      salary: form.salary.trim() || null, required_skills: form.skills, description: form.description.trim(),
-      apply_url: url, source: 'user', created_by: session.user.id,
-    });
-    setSaving(false);
-    if (error) return toast(error.message, 'err');
-    await d.log('job', `Added opportunity: ${title} at ${company}`, 2);
-    toast('Opportunity added to your matches.');
-    setAdding(false); setForm(blank); d.refresh();
-  }
-
+  // Opportunities added earlier (before "Add opportunity" was removed) can still be deleted by their owner.
   async function removeOwn(m: JobMatch) {
     if (!session || !m.job.created_by) return;
     if (!window.confirm(`Remove "${m.job.title}" at ${m.job.company}?`)) return;
@@ -94,13 +63,11 @@ export function Jobs() {
     d.refresh();
   }
 
-  const toggleSkill = (slug: string) => setForm((f) => ({ ...f, skills: f.skills.includes(slug) ? f.skills.filter((x) => x !== slug) : [...f.skills, slug] }));
   const counts = { all: d.jobMatches.length, saved: d.jobMatches.filter((m) => m.status === 'saved').length, applied: d.jobMatches.filter((m) => m.status === 'applied').length };
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Job Matches" sub="Match % = how close your verified skill scores are to each role's required skills. Apply opens the employer's own careers page — found a specific opening? Add it as your own opportunity card."
-        right={<Btn onClick={() => { setForm(blank); setAdding(true); }}><Plus className="w-4 h-4" /> Add opportunity</Btn>} />
+      <PageHeader title="Job Matches" sub="Match % = how close your verified skill scores are to each role's required skills. Apply opens the employer's own careers page." />
 
       <div className="space-y-3">
         <div className="flex flex-wrap gap-3 items-center">
@@ -131,15 +98,9 @@ export function Jobs() {
         <div className="text-[11px] text-muted">Showing {list.length} of {d.jobMatches.length} opportunities</div>
       </div>
 
-      {list.length === 0 && <Card><Empty title="No jobs match these filters" text="Clear the filters, or add an opportunity you found yourself." action={<Btn variant="ghost" onClick={reset}>Reset filters</Btn>} /></Card>}
+      {list.length === 0 && <Card><Empty title="No jobs match these filters" text="Try clearing the filters." action={<Btn variant="ghost" onClick={reset}>Reset filters</Btn>} /></Card>}
 
       <div className="grid lg:grid-cols-2 gap-5">
-        <button onClick={() => { setForm(blank); setAdding(true); }} className="border-2 border-dashed border-line hover:border-brand hover:bg-brand-soft/40 transition rounded-2xl p-5 min-h-[160px] flex flex-col items-center justify-center text-center text-muted hover:text-brand">
-          <div className="w-11 h-11 rounded-full bg-brand-soft text-brand flex items-center justify-center mb-2"><Plus className="w-5 h-5" /></div>
-          <div className="font-extrabold text-navy">Add a new opportunity</div>
-          <div className="text-xs mt-1 max-w-[260px]">Paste a company, role and link — we'll match it against your skills.</div>
-        </button>
-
         {list.map((m) => (
           <Card key={m.job.id} className="p-5 flex flex-col">
             <div className="flex items-start justify-between gap-3">
@@ -180,36 +141,6 @@ export function Jobs() {
             </div>
           </div>
         )}
-      </Modal>
-
-      <Modal open={adding} onClose={() => setAdding(false)} title="Add a new opportunity">
-        <div className="space-y-4">
-          <div className="grid sm:grid-cols-2 gap-3">
-            <Field label="Company name *"><input className={inputCls} value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} placeholder="e.g. Tata Motors" maxLength={80} /></Field>
-            <Field label="Job role *"><input className={inputCls} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Design Engineer" maxLength={100} /></Field>
-          </div>
-          <Field label="Job / careers link *"><input className={inputCls} inputMode="url" value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="https://…" /></Field>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <Field label="Location"><input className={inputCls} value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="City or Remote" maxLength={80} /></Field>
-            <Field label="Salary (optional)"><input className={inputCls} value={form.salary} onChange={(e) => setForm({ ...form, salary: e.target.value })} placeholder="e.g. ₹5–7 LPA" maxLength={40} /></Field>
-            <Field label="Work type"><select className={inputCls} value={form.work_type} onChange={(e) => setForm({ ...form, work_type: e.target.value })}>{['On-site', 'Hybrid', 'Remote'].map((x) => <option key={x}>{x}</option>)}</select></Field>
-            <Field label="Level"><select className={inputCls} value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })}>{['Internship', 'Entry Level', 'Mid Level'].map((x) => <option key={x}>{x}</option>)}</select></Field>
-          </div>
-          <Field label="Skills required (pick from your path — used to compute the match)">
-            <div className="flex flex-wrap gap-2">
-              {d.skills.map((s) => {
-                const on = form.skills.includes(s.slug);
-                return <button type="button" key={s.id} onClick={() => toggleSkill(s.slug)} className={`text-[11px] font-bold px-2.5 py-1 rounded-md border ${on ? 'bg-brand text-white border-brand' : 'bg-white text-navy border-line hover:border-brand'}`}>{s.name}</button>;
-              })}
-            </div>
-          </Field>
-          <Field label="Description / notes (optional)"><textarea className={inputCls} rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} maxLength={500} /></Field>
-          <p className="text-[11px] text-muted">Only you can see opportunities you add. They're saved under {d.domain?.name}.</p>
-          <div className="flex justify-end gap-3">
-            <Btn variant="ghost" onClick={() => setAdding(false)}>Cancel</Btn>
-            <Btn onClick={addOpportunity} disabled={saving}>{saving ? 'Adding…' : 'Add opportunity'}</Btn>
-          </div>
-        </div>
       </Modal>
     </div>
   );

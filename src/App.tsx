@@ -10,6 +10,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Domains } from './pages/Domains';
 import { Resume } from './pages/Resume';
 import { Assessments } from './pages/Assessments';
+import { Aptitude } from './pages/Aptitude';
 import { Quiz } from './pages/Quiz';
 import { Coding } from './pages/Coding';
 import { SkillGap } from './pages/SkillGap';
@@ -54,6 +55,7 @@ export default function App() {
                 <Route path="/resume" element={<Resume />} />
                 <Route path="/assessments" element={<Assessments />} />
                 <Route path="/assessments/quiz/:skillId" element={<Quiz />} />
+                <Route path="/assessments/aptitude" element={<Aptitude />} /> 
                 <Route path="/assessments/coding/:challengeId" element={<Coding />} />
                 <Route path="/skill-gap" element={<SkillGap />} />
                 <Route path="/career-path" element={<CareerPath />} />
