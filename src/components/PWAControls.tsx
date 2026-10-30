@@ -90,7 +90,7 @@ export function PWAControls() {
   return (
     <>
       {!installed && (
-        <button onClick={installPrompt ? install : () => setShowInstallHelp(true)} aria-label="Install SkillTwin Live"
+        <button onClick={installPrompt ? install : () => setShowInstallHelp(true)} aria-label="Install SkillTwin AI"
           className="fixed bottom-5 right-5 z-[100] inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-bold text-white shadow-xl hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2">
           <Download className="h-4 w-4" /> Install App
         </button>
@@ -99,7 +99,7 @@ export function PWAControls() {
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 p-4" onClick={() => setShowInstallHelp(false)}>
           <section role="dialog" aria-modal="true" aria-labelledby="install-help-title" className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
             <div className="mb-3 flex items-center justify-between">
-              <h2 id="install-help-title" className="font-bold text-navy">Install SkillTwin Live</h2>
+              <h2 id="install-help-title" className="font-bold text-navy">Install SkillTwin AI</h2>
               <button onClick={() => setShowInstallHelp(false)} aria-label="Close install help" className="p-1 text-muted"><X className="h-4 w-4" /></button>
             </div>
             <p className="mb-3 text-sm text-muted">Your browser doesn't offer a one-tap install prompt here. Try these steps:</p>
@@ -114,7 +114,7 @@ export function PWAControls() {
       {showUpdate && (
         <div role="status" className="fixed bottom-5 left-1/2 z-[110] flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 items-center gap-3 rounded-xl border border-line bg-white p-3 shadow-2xl">
           <RefreshCw className="h-5 w-5 shrink-0 text-brand" />
-          <p className="flex-1 text-sm text-navy">A new version of SkillTwin Live is ready.</p>
+          <p className="flex-1 text-sm text-navy">A new version of SkillTwin AI is ready.</p>
           <button onClick={update} className="rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white">Update</button>
           <button onClick={() => setShowUpdate(false)} aria-label="Dismiss update" className="p-1 text-muted"><X className="h-4 w-4" /></button>
         </div>

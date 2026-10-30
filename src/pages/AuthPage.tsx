@@ -41,7 +41,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
             <div key={t} className="flex items-center gap-3 mb-3 text-slate-200 text-sm"><span className="w-5 h-5 rounded-full bg-teal flex items-center justify-center"><Check className="w-3 h-3" /></span>{t}</div>
           ))}
         </div>
-        <div className="text-xs text-slate-400">© SkillTwin Live</div>
+        <div className="text-xs text-slate-400">© SkillTwin AI</div>
       </div>
       <div className="flex items-center justify-center p-6 bg-canvas">
         <form onSubmit={submit} className="w-full max-w-sm space-y-4">

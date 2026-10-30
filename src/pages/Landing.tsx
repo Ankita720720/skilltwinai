@@ -33,7 +33,7 @@ export function Landing() {
         <div className="max-w-6xl mx-auto px-5 py-20 sm:py-28 text-center">
           <div className="inline-block text-[11px] font-bold tracking-widest uppercase text-[#B8AAFF] bg-white/10 rounded-full px-3 py-1 mb-5">✦ Your skills, measured — not guessed</div>
           <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight max-w-3xl mx-auto leading-[1.05]">A career companion that <span className="text-[#7CF0DB]">learns from what you do</span></h1>
-          <p className="text-slate-300 mt-5 max-w-2xl mx-auto">Take assessments, practise interviews and build projects. SkillTwin Live turns every action into a personal readiness score, gap analysis and roadmap.</p>
+          <p className="text-slate-300 mt-5 max-w-2xl mx-auto">Take assessments, practise interviews and build projects. SkillTwin AI turns every action into a personal readiness score, gap analysis and roadmap.</p>
           <div className="mt-8 flex justify-center gap-3">
             <Link to="/signup" className="bg-brand hover:bg-brand-dark text-white font-bold px-6 py-3 rounded-[10px]">Create your skill twin</Link>
             <Link to="/login" className="bg-white/10 hover:bg-white/20 text-white font-bold px-6 py-3 rounded-[10px]">Log in</Link>
@@ -52,7 +52,7 @@ export function Landing() {
           ))}
         </div>
       </section>
-      <footer className="border-t border-line text-center text-xs text-muted py-6">© {new Date().getFullYear()} SkillTwin Live</footer>
+      <footer className="border-t border-line text-center text-xs text-muted py-6">© {new Date().getFullYear()} SkillTwin AI</footer>
     </div>
   );
 }
