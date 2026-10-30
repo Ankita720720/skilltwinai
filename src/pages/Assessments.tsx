@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 import { Clock, Code2, ShieldCheck } from 'lucide-react';
-import { Card, CardHead, PageHeader, Badge, Progress, LinkBtn, Empty, scoreColor, timeAgo } from '../components/ui';
+import { Card, CardHead, Badge, Progress, LinkBtn, Empty, scoreColor, timeAgo } from '../components/ui';
 import { useData } from '../store/DataContext';
+import { HeroCard, heroPrimary, heroGhost } from '../components/HeroCard';
 
 export function Assessments() {
   const d = useData();
@@ -11,9 +12,25 @@ export function Assessments() {
     ...d.coding.map((c) => ({ id: c.id, kind: 'Coding', name: d.challenges.find((x) => x.id === c.challenge_id)?.title ?? 'Challenge', pct: Math.round((c.passed / c.total) * 100), detail: `${c.passed}/${c.total} tests`, at: c.created_at })),
   ].sort((a, b) => b.at.localeCompare(a.at));
 
+  const all = Object.values(d.scores);
+  const verified = all.filter((s) => s.verified).length;
+  const testable = all.filter((s) => (d.questionCounts[s.skill.id] || 0) > 0);
+  const next = [...testable].sort((a, b) => Number(a.verified) - Number(b.verified) || (a.verified ? a.score - b.score : b.skill.weight - a.skill.weight))[0];
+  const avgQuiz = d.quizzes.length ? Math.round(d.quizzes.reduce((a, q) => a + (q.total ? (q.correct / q.total) * 100 : 0), 0) / d.quizzes.length) : 0;
+  const totalQuestions = Object.values(d.questionCounts).reduce((a, b) => a + b, 0);
+
   return (
     <div className="space-y-6">
-      <PageHeader title="Assessments" sub="Every attempt updates your skill score, gap analysis and job matches. Your latest three attempts per skill are averaged, so you can improve." />
+      <HeroCard eyebrow={`✦ Assessments • ${d.domain?.name ?? ''}`} ring={d.readiness} ringLabel="Ready"
+        title={verified === 0 ? 'Verify your first skill with a quiz' : `${verified}/${all.length} skills verified by tests`}
+        stats={[{ label: 'Quizzes', value: d.quizzes.length }, { label: 'Coding', value: d.coding.length }, { label: 'Avg quiz', value: d.quizzes.length ? `${avgQuiz}%` : '—' }, { label: 'Questions', value: totalQuestions }]}
+        actions={<>
+          {next && <Link to={`/assessments/quiz/${next.skill.id}`} className={heroPrimary}>{next.verified ? 'Improve' : 'Start'}: {next.skill.name}</Link>}
+          <Link to="/skill-gap" className={heroGhost}>View skill gap</Link>
+        </>}>
+        Every attempt updates your skill score, gap analysis and job matches. Your latest three attempts per skill are averaged, so you can improve.
+        {next && <> Recommended next: <strong className="text-white">{next.skill.name}</strong>{next.verified ? ` (currently ${next.score}%)` : ' — not tested yet'}.</>}
+      </HeroCard>
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
         {Object.values(d.scores).map((s) => {
           const count = d.questionCounts[s.skill.id] || 0;
